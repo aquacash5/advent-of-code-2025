@@ -1,0 +1,8 @@
+[workspace]
+resolver = "2"
+members = ["day-*", "tree", "utils", "xtask"]
+
+[workspace.dependencies]
+itertools = "0.14.0"
+nom = "8.0.0"
+utils = { path = "../utils", version = "*" }
