@@ -41,7 +41,7 @@ fn part1(input: &InputData) -> AocResult<usize> {
                 Operation::Left(i) => dial + i,
             }
             .rem_euclid(100);
-            (cur, zeros + if cur == 0 { 1 } else { 0 })
+            (cur, zeros + usize::from(cur == 0))
         })
         .1)
 }
@@ -56,14 +56,14 @@ fn part2(input: &InputData) -> AocResult<i64> {
                 let pass_zero = i.div_euclid(100);
                 let i = i.rem_euclid(100);
                 let new_dial = dial - i;
-                let pass_zero = pass_zero + if new_dial <= 0 && dial != 0 { 1 } else { 0 };
+                let pass_zero = pass_zero + i64::from(new_dial <= 0 && dial != 0);
                 (new_dial.rem_euclid(100), zeros + pass_zero)
             }
             Operation::Right(i) => {
                 let pass_zero = i.div_euclid(100);
                 let i = i.rem_euclid(100);
                 let new_dial = dial + i;
-                let pass_zero = pass_zero + if new_dial >= 100 && dial != 0 { 1 } else { 0 };
+                let pass_zero = pass_zero + i64::from(new_dial >= 100 && dial != 0);
                 (new_dial.rem_euclid(100), zeros + pass_zero)
             }
         })

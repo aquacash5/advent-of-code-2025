@@ -12,83 +12,83 @@ struct Point {
 }
 
 impl Point {
-    fn neighbors(&self) -> Vec<Point> {
+    fn neighbors(&self) -> Vec<Self> {
         chain!(
-            self.up().and_then(Point::left),
+            self.up().and_then(Self::left),
             self.up(),
-            self.up().and_then(Point::right),
+            self.up().and_then(Self::right),
             self.left(),
             self.right(),
-            self.down().and_then(Point::left),
+            self.down().and_then(Self::left),
             self.down(),
-            self.down().and_then(Point::right)
+            self.down().and_then(Self::right)
         )
         .collect_vec()
     }
 
-    fn up(self) -> Option<Point> {
-        let Point {
+    fn up(self) -> Option<Self> {
+        let Self {
             col,
-            max_col,
             max_row,
+            max_col,
             ..
         } = self;
-        self.row.checked_sub(1).map(|row| Point {
+        self.row.checked_sub(1).map(|row| Self {
             row,
             col,
-            max_col,
             max_row,
+            max_col,
         })
     }
 
-    fn down(self) -> Option<Point> {
-        let Point {
+    fn down(self) -> Option<Self> {
+        let Self {
             col,
-            max_col,
             max_row,
+            max_col,
             ..
         } = self;
         self.row
             .checked_add(1)
             .filter(|&row| row < max_row)
-            .map(|row| Point {
+            .map(|row| Self {
                 row,
                 col,
-                max_col,
                 max_row,
+                max_col,
             })
     }
 
-    fn left(self) -> Option<Point> {
-        let Point {
+    fn left(self) -> Option<Self> {
+        let Self {
             row,
-            max_col,
             max_row,
+            max_col,
             ..
         } = self;
-        self.col.checked_sub(1).map(|col| Point {
+        self.col.checked_sub(1).map(|col| Self {
             row,
             col,
-            max_col,
             max_row,
+            max_col,
         })
     }
 
-    fn right(self) -> Option<Point> {
-        let Point {
+    fn right(self) -> Option<Self> {
+        let Self {
             row,
-            max_col,
             max_row,
+            max_col,
             ..
         } = self;
         self.col
             .checked_add(1)
             .filter(|&col| col < max_col)
-            .map(|col| Point {
+            .map(|col| Self {
                 row,
                 col,
-                max_col,
                 max_row,
+                max_col,
             })
     }
 }
@@ -100,7 +100,7 @@ enum Storage {
 }
 
 impl Storage {
-    fn take(&mut self) {
+    const fn take(&mut self) {
         *self = Self::Empty;
     }
 }
@@ -169,17 +169,17 @@ fn part2(input: &InputData) -> AocResult<usize> {
     let mut input: InputData = input.clone();
 
     while changed {
-        let changes = input
+        let removals = input
             .warehouse
             .indexed_iter()
             .filter(|&(loc, &s)| s == Storage::Roll && input.neighbors_count(loc) < 4)
             .map(|(loc, _)| loc)
             .collect_vec();
-        for &loc in &changes {
-            input.warehouse[loc].take()
+        for &loc in &removals {
+            input.warehouse[loc].take();
         }
-        changed = !changes.is_empty();
-        count += changes.len();
+        changed = !removals.is_empty();
+        count += removals.len();
     }
 
     Ok(count)
