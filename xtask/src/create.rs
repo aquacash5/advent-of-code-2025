@@ -134,6 +134,10 @@ pub fn generate_input(day: u64, location: &Path) -> anyhow::Result<()> {
             format!("https://adventofcode.com/{AOC_YEAR}/day/{day}/input"),
         )
         .header(reqwest::header::COOKIE, format!("session={aoc_session}"))
+        .header(
+            reqwest::header::USER_AGENT,
+            "aquacash5-aoc/2025 kylejbloom@gmail.com",
+        )
         .send()?
         .error_for_status()?
         .text()?;

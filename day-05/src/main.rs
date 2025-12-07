@@ -21,8 +21,8 @@ fn merge_range(
         b.end().abs_diff(*a.start()) == 1,
     ) {
         (true, true, _, _) => (a, None),
-        (true, false, _, _) | (_, _, true, _) => (*a.start()..=*b.end(), None),
-        (false, true, _, _) | (_, _, _, true) => (*b.start()..=*a.end(), None),
+        (true, _, _, _) | (_, _, true, _) => (*a.start()..=*b.end(), None),
+        (_, true, _, _) | (_, _, _, true) => (*b.start()..=*a.end(), None),
         _ => (a, Some(b)),
     }
 }

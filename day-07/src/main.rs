@@ -1,5 +1,3 @@
-use std::collections::{BTreeMap, BTreeSet};
-
 use itertools::Itertools;
 #[allow(clippy::wildcard_imports)]
 use utils::*;
@@ -7,7 +5,7 @@ use utils::*;
 #[derive(Debug, PartialEq)]
 struct InputData {
     start: usize,
-    rows: Vec<BTreeSet<usize>>,
+    rows: Vec<Vec<bool>>,
 }
 
 fn parse(input: &str) -> ParseResult<'_, InputData> {
@@ -15,36 +13,32 @@ fn parse(input: &str) -> ParseResult<'_, InputData> {
     let start = lines
         .next()
         .unwrap()
-        .as_bytes()
-        .iter()
+        .bytes()
         .enumerate()
-        .find_map(|(i, &c)| if c == b'S' { Some(i) } else { None })
+        .find_map(|(i, c)| if c == b'S' { Some(i) } else { None })
         .unwrap();
     let rows = lines
-        .map(|line| {
-            line.as_bytes()
-                .iter()
-                .enumerate()
-                .filter_map(|(i, &c)| if c == b'^' { Some(i) } else { None })
-                .collect()
-        })
+        .map(|line| line.bytes().map(|c| c == b'^').collect())
         .collect_vec();
     Ok(("", InputData { start, rows }))
 }
 
 #[allow(clippy::unnecessary_wraps)]
 fn part1(input: &InputData) -> AocResult<usize> {
+    let init = (0..input.rows.len())
+        .map(|i| i == input.start)
+        .collect_vec();
     Ok(input
         .rows
         .iter()
-        .scan(BTreeSet::from([input.start]), |state, cur| {
+        .scan(init, |state, cur| {
             let mut count = 0;
-            for i in state.clone() {
-                if cur.contains(&i) {
+            for (i, c) in cur.iter().enumerate() {
+                if *c && state[i] {
                     count += 1;
-                    state.remove(&i);
-                    state.insert(i - 1);
-                    state.insert(i + 1);
+                    state[i] = false;
+                    state[i - 1] = true;
+                    state[i + 1] = true;
                 }
             }
             Some(count)
@@ -54,21 +48,23 @@ fn part1(input: &InputData) -> AocResult<usize> {
 
 #[allow(clippy::unnecessary_wraps)]
 fn part2(input: &InputData) -> AocResult<usize> {
+    let init = (0..input.rows.len())
+        .map(|i| usize::from(i == input.start))
+        .collect_vec();
     Ok(input
         .rows
         .iter()
-        .fold(BTreeMap::from([(input.start, 1usize)]), |mut state, cur| {
-            let keys = state.keys().copied().collect_vec();
-            for i in keys {
-                if cur.contains(&i) {
-                    let v = state.remove(&i).unwrap();
-                    state.entry(i - 1).and_modify(|c| *c += v).or_insert(v);
-                    state.entry(i + 1).and_modify(|c| *c += v).or_insert(v);
+        .fold(init, |mut state, cur| {
+            for (i, c) in cur.iter().enumerate() {
+                if *c {
+                    state[i - 1] += state[i];
+                    state[i + 1] += state[i];
+                    state[i] = 0;
                 }
             }
             state
         })
-        .values()
+        .into_iter()
         .sum())
 }
 
@@ -104,21 +100,66 @@ mod tests {
             InputData {
                 start: 7,
                 rows: vec![
-                    BTreeSet::from([]),
-                    BTreeSet::from([7]),
-                    BTreeSet::from([]),
-                    BTreeSet::from([6, 8]),
-                    BTreeSet::from([]),
-                    BTreeSet::from([5, 7, 9]),
-                    BTreeSet::from([]),
-                    BTreeSet::from([4, 6, 10]),
-                    BTreeSet::from([]),
-                    BTreeSet::from([3, 5, 9, 11]),
-                    BTreeSet::from([]),
-                    BTreeSet::from([2, 6, 12]),
-                    BTreeSet::from([]),
-                    BTreeSet::from([1, 3, 5, 7, 9, 13]),
-                    BTreeSet::from([]),
+                    vec![
+                        false, false, false, false, false, false, false, false, false, false,
+                        false, false, false, false, false
+                    ],
+                    vec![
+                        false, false, false, false, false, false, false, true, false, false, false,
+                        false, false, false, false
+                    ],
+                    vec![
+                        false, false, false, false, false, false, false, false, false, false,
+                        false, false, false, false, false
+                    ],
+                    vec![
+                        false, false, false, false, false, false, true, false, true, false, false,
+                        false, false, false, false
+                    ],
+                    vec![
+                        false, false, false, false, false, false, false, false, false, false,
+                        false, false, false, false, false
+                    ],
+                    vec![
+                        false, false, false, false, false, true, false, true, false, true, false,
+                        false, false, false, false
+                    ],
+                    vec![
+                        false, false, false, false, false, false, false, false, false, false,
+                        false, false, false, false, false
+                    ],
+                    vec![
+                        false, false, false, false, true, false, true, false, false, false, true,
+                        false, false, false, false
+                    ],
+                    vec![
+                        false, false, false, false, false, false, false, false, false, false,
+                        false, false, false, false, false
+                    ],
+                    vec![
+                        false, false, false, true, false, true, false, false, false, true, false,
+                        true, false, false, false
+                    ],
+                    vec![
+                        false, false, false, false, false, false, false, false, false, false,
+                        false, false, false, false, false
+                    ],
+                    vec![
+                        false, false, true, false, false, false, true, false, false, false, false,
+                        false, true, false, false
+                    ],
+                    vec![
+                        false, false, false, false, false, false, false, false, false, false,
+                        false, false, false, false, false
+                    ],
+                    vec![
+                        false, true, false, true, false, true, false, true, false, true, false,
+                        false, false, true, false
+                    ],
+                    vec![
+                        false, false, false, false, false, false, false, false, false, false,
+                        false, false, false, false, false
+                    ]
                 ]
             }
         );

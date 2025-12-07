@@ -8,21 +8,21 @@ struct InputData {
 }
 
 fn find_largest(s: &str, i: usize) -> u64 {
-    let mut acc = String::default();
-    let mut start = 0usize;
-    for r in 1..=i {
-        let ignore = i - r;
-        let end = s.len() - 1;
-        let &(i, biggest) = s[start..=(end - ignore)]
-            .chars()
-            .enumerate()
-            .max_set_by_key(|&(_, i)| i)
-            .first()
-            .expect("Must be empty");
-        acc.push(biggest);
-        start += i + 1;
-    }
-    acc.parse().expect("All numbers")
+    (1..=i)
+        .scan(s, |rem, r| {
+            let end = rem.len() - (i - r);
+            let (i, biggest) = rem[..end]
+                .chars()
+                .enumerate()
+                .reduce(|acc, cur| if cur.1 > acc.1 { cur } else { acc })
+                .map(|(i, c)| (i + 1, c))
+                .expect("No max value");
+            *rem = &rem[i..];
+            Some(biggest)
+        })
+        .collect::<String>()
+        .parse()
+        .expect("All numbers")
 }
 
 fn parse(input: &str) -> ParseResult<'_, InputData> {

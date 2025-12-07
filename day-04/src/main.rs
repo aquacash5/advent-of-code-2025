@@ -74,19 +74,16 @@ fn parse(input: &str) -> ParseResult<'_, InputData> {
                 .lines()
                 .enumerate()
                 .flat_map(|(row, line)| {
-                    line.as_bytes()
-                        .iter()
-                        .enumerate()
-                        .filter_map(move |(col, c)| {
-                            if *c == b'@' {
-                                Some(Point {
-                                    row: row as i32,
-                                    col: col as i32,
-                                })
-                            } else {
-                                None
-                            }
-                        })
+                    line.bytes().enumerate().filter_map(move |(col, c)| {
+                        if c == b'@' {
+                            Some(Point {
+                                row: row as i32,
+                                col: col as i32,
+                            })
+                        } else {
+                            None
+                        }
+                    })
                 })
                 .collect(),
         },
