@@ -1,4 +1,6 @@
+use geo::{Contains, LineString, Polygon, Rect, coord};
 use itertools::Itertools;
+use rayon::iter::{ParallelBridge, ParallelIterator};
 #[allow(clippy::wildcard_imports)]
 use utils::*;
 
@@ -21,10 +23,6 @@ struct Rectangle {
 }
 
 impl Rectangle {
-    fn is_line(&self) -> bool {
-        self.a.x == self.b.x || self.a.y == self.b.y
-    }
-
     fn area(&self) -> usize {
         self.a
             .x
@@ -32,36 +30,14 @@ impl Rectangle {
             .strict_add(1)
             .strict_mul(self.a.y.abs_diff(self.b.y).strict_add(1))
     }
+}
 
-    fn x_between(&self, other: &Rectangle) -> bool {
-        let (a, b) = (self.a.x.min(self.b.x), self.a.x.max(self.b.x));
-        ((a + 1)..b).contains(&other.a.x) || ((a + 1)..b).contains(&other.b.x)
-    }
-
-    fn y_between(&self, other: &Rectangle) -> bool {
-        let (a, b) = (self.a.y.min(self.b.y), self.a.y.max(self.b.y));
-        ((a + 1)..b).contains(&other.a.y) || ((a + 1)..b).contains(&other.b.y)
-    }
-
-    fn x_straddles(&self, other: &Rectangle) -> bool {
-        let (a, b) = (self.a.x.min(self.b.x), self.a.x.max(self.b.x));
-        let (c, d) = (other.a.x.min(other.b.x), other.a.x.max(other.b.x));
-        c.le(&a) && d.ge(&b)
-    }
-
-    fn y_straddles(&self, other: &Rectangle) -> bool {
-        let (a, b) = (self.a.y.min(self.b.y), self.a.y.max(self.b.y));
-        let (c, d) = (other.a.y.min(other.b.y), other.a.y.max(other.b.y));
-        c.le(&a) && d.ge(&b)
-    }
-
-    #[allow(clippy::nonminimal_bool)]
-    fn intersects(&self, other: &Rectangle) -> bool {
-        let x_between = self.x_between(other);
-        let y_between = self.y_between(other);
-        (x_between && y_between)
-            || (x_between && self.y_straddles(other))
-            || (y_between && self.x_straddles(other))
+impl From<Rectangle> for Rect<f64> {
+    fn from(Rectangle { a, b }: Rectangle) -> Self {
+        Rect::new(
+            coord! { x: a.x as f64, y: a.y as f64 },
+            coord! { x: b.x as f64, y: b.y as f64 },
+        )
     }
 }
 
@@ -94,6 +70,7 @@ fn part1(input: &InputData) -> AocResult<usize> {
         .iter()
         .copied()
         .tuple_combinations()
+        .par_bridge()
         .map(|(a, b)| Rectangle { a, b }.area())
         .max()
         .unwrap())
@@ -101,22 +78,25 @@ fn part1(input: &InputData) -> AocResult<usize> {
 
 #[allow(clippy::unnecessary_wraps)]
 fn part2(input: &InputData) -> AocResult<usize> {
-    let lines = input
-        .points
-        .iter()
-        .copied()
-        .circular_tuple_windows()
-        .map(|(a, b)| Rectangle { a, b })
-        .filter(Rectangle::is_line)
-        .collect_vec();
+    let tiles = Polygon::new(
+        LineString::from(
+            input
+                .points
+                .iter()
+                .map(|Point { x, y }| (*x as f64, *y as f64))
+                .collect_vec(),
+        ),
+        vec![],
+    );
+
     Ok(input
         .points
         .iter()
         .copied()
         .tuple_combinations()
+        .par_bridge()
         .map(|(a, b)| Rectangle { a, b })
-        .filter(|r| !r.is_line())
-        .filter(|r| !lines.iter().any(|l| r.intersects(l)))
+        .filter(|r| tiles.contains(&Rect::<f64>::from(*r)))
         .map(|r| r.area())
         .max()
         .unwrap())
