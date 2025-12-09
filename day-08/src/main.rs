@@ -54,25 +54,20 @@ fn part1(input: &InputData) -> AocResult<usize> {
         .enumerate()
         .map(|(i, p)| (p, i))
         .collect();
-    let pairs = input
+    Ok(input
         .points
         .iter()
-        .copied()
-        .cartesian_product(input.points.iter().copied())
-        .filter(|(a, b)| a != b && a < b)
+        .tuple_combinations()
         .sorted_by_key(|(a, b)| a.square_distance(b))
-        .collect_vec();
-    Ok(pairs
-        .iter()
         .try_fold((1usize, points), |(count, mut points), (a, b)| {
             let a_c = points[a];
             let b_c = points[b];
-            let min = a_c.min(b_c);
             if count == iterations {
                 ControlFlow::Break(points)
             } else if a_c == b_c {
                 ControlFlow::Continue((count + append, points))
             } else {
+                let min = a_c.min(b_c);
                 points
                     .iter_mut()
                     .for_each(|(_p, c)| *c = if *c == a_c || *c == b_c { min } else { *c });
@@ -98,23 +93,18 @@ fn part2(input: &InputData) -> AocResult<u64> {
         .enumerate()
         .map(|(i, p)| (p, i))
         .collect();
-    let pairs = input
+    Ok(input
         .points
         .iter()
-        .copied()
-        .cartesian_product(input.points.iter().copied())
-        .filter(|(a, b)| a != b && a < b)
+        .tuple_combinations()
         .sorted_by_key(|(a, b)| a.square_distance(b))
-        .collect_vec();
-    Ok(pairs
-        .iter()
         .try_fold(points, |mut points, (a, b)| {
             let a_c = points[a];
             let b_c = points[b];
-            let min = a_c.min(b_c);
             if a_c == b_c {
                 ControlFlow::Continue(points)
             } else {
+                let min = a_c.min(b_c);
                 points
                     .iter_mut()
                     .for_each(|(_p, c)| *c = if *c == a_c || *c == b_c { min } else { *c });
