@@ -7,6 +7,8 @@ edition = "2024"
 
 [dependencies]
 itertools.workspace = true
+memoize = "0.5.1"
 nom.workspace = true
+rayon = "1.11.0"
 utils = { path = "../utils", version = "*" }
 
